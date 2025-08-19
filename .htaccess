@@ -1,0 +1,10 @@
+DirectoryIndex index.php
+RewriteEngine On
+RewriteCond %{HTTPS} !=on
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+SetEnv DB_USERNAME admin_salsa
+SetEnv DB_PASSWORD AdmSal_0101!
+SetEnv DB_NAME RandoSecure
+SetEnv DB_HOST localhost
+SetEnv PORT 3307
+SetEnv CHARSET utf8mb4
