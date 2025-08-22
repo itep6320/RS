@@ -124,7 +124,7 @@
                                 fillOpacity: 0.3
                             }
                         }).addTo(zonesLayer);
-                        const popupHtml = `<b>${z.nom}</b><br>${z.type_chasse}<br>${z.date_debut} → ${z.date_fin}<br><button onclick="deleteZone(${z.id})" style="margin-top:5px;color:red;">Supprimer</button>`;
+                        const popupHtml = `<b>${z.nom}</b><br>Zone de chasse : ${z.type_chasse}<br>${z.date_debut} → ${z.date_fin}<br><button onclick="deleteZone(${z.id})" style="margin-top:5px;color:red;">Supprimer</button>`;
                         layer.bindPopup(popupHtml);
 
                         // Zoom lent sur click 

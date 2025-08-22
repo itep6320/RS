@@ -20,7 +20,7 @@ if (!$id_user) {
 
 // Lecture de toutes les zones de chasse
 if ($action == 'zones') {
-    $res = $pdo->query("SELECT id,nom,type_chasse,date_debut,date_fin,ST_AsGeoJSON(geometry) AS geojson FROM zones_chasse");
+    $res = $pdo->query("SELECT id, nom, type_chasse, DATE(date_debut) as date_debut, DATE(date_fin) as date_fin, ST_AsGeoJSON(geometry) as geojson FROM zones_chasse");
     $zones = $res->fetchAll(PDO::FETCH_ASSOC);
     echo json_encode($zones);
     exit;
@@ -28,9 +28,14 @@ if ($action == 'zones') {
 
 // Lecture de toutes les traces pour l'utilisateur courant
 if ($action == 'read') {
-    $stmt = $pdo->prepare("SELECT id,nom,ST_AsGeoJSON(geometry) AS geojson 
-                           FROM traces_gpx 
-                           WHERE id_user = ?");
+    $stmt = $pdo->prepare("SELECT id, nom, 
+                              CASE 
+                                WHEN geojson_raw IS NOT NULL THEN geojson_raw
+                                ELSE ST_AsGeoJSON(geometry) 
+                              END AS geojson
+                       FROM traces_gpx 
+                       WHERE id_user = ?");
+
     $stmt->execute([$id_user]);
     echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
     exit;
@@ -73,12 +78,22 @@ if ($action == 'create') {
             foreach ($seg->trkpt as $pt) {
                 $lat = floatval($pt['lat']);
                 $lon = floatval($pt['lon']);
-                $coords[] = [$lon, $lat];
+                $ele = isset($pt->ele) ? floatval($pt->ele) : null;
+
+                // On ajoute l'altitude si elle existe
+                if ($ele !== null) {
+                    $coords[] = [$lon, $lat, $ele];
+                } else {
+                    $coords[] = [$lon, $lat];
+                }
             }
             if (count($coords) > 1) {
                 $geojson['features'][] = [
                     'type' => 'Feature',
-                    'geometry' => ['type' => 'LineString', 'coordinates' => $coords],
+                    'geometry' => [
+                        'type' => 'LineString',
+                        'coordinates' => $coords
+                    ],
                     'properties' => []
                 ];
             }
@@ -96,9 +111,10 @@ if ($action == 'create') {
 
     // Insertion SQL avec id_user
     try {
-        $stmt = $pdo->prepare("INSERT INTO traces_gpx (nom,geometry,id_user) 
-                               VALUES (?, ST_GeomFromGeoJSON(?), ?)");
-        $ok = $stmt->execute([$nom, $json, $id_user]);
+        $stmt = $pdo->prepare("INSERT INTO traces_gpx (nom, geometry, geojson_raw, id_user) 
+                       VALUES (?, ST_GeomFromGeoJSON(?), ?, ?)");
+        $ok = $stmt->execute([$nom, $json, $json, $id_user]);
+
         echo $ok ? 'OK' : 'Erreur insertion';
     } catch (Exception $e) {
         exit("Erreur SQL: " . $e->getMessage());

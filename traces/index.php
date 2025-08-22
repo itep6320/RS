@@ -82,7 +82,7 @@ require_once __DIR__ . "/../commun/header.php";
             }).addTo(zonesLayer);
 
             // Affichage Pop-up détail + suppression
-            layer.bindPopup(`<b>${z.nom}</b><br>${z.type_chasse}<br>${z.date_debut} → ${z.date_fin}`);
+            layer.bindPopup(`<b>${z.nom}</b><br>Zone de chasse :${z.type_chasse}<br>${z.date_debut} → ${z.date_fin}`);
 
             // Zoom lent sur click 
             layer.on('click', () => {
@@ -125,6 +125,7 @@ require_once __DIR__ . "/../commun/header.php";
 
             // Extraire les coordonnées
             let coords = [];
+            
             layer.eachLayer(l => {
               if (l.feature && l.feature.geometry.type === "LineString") {
                 coords = coords.concat(l.feature.geometry.coordinates);
@@ -137,7 +138,7 @@ require_once __DIR__ . "/../commun/header.php";
             let negGain = 0;
             let minAlt = Infinity;
             let maxAlt = -Infinity;
-
+            
             for (let i = 1; i < coords.length; i++) {
               const [lon1, lat1, ele1] = coords[i - 1];
               const [lon2, lat2, ele2] = coords[i];
